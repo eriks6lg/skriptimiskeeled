@@ -19,12 +19,12 @@ if [ $? != 0 ]
 fi
 
 # kontrollib, kas kaust on juba olemas
-test -d $1
+test -d $1 > /dev/null 2>&1
 
 # juhul, kui eelneva käsu veakood pole 0 (kausta pole olemas)
 if [ $? != 0 ]
 	then
-	sudo mkdir -p $1
+	sudo mkdir -p $1 > /dev/null 2>&1
 	
 	# kui kausta loomisel esines tõrge
 	if [ $? != 0 ]
@@ -33,3 +33,20 @@ if [ $? != 0 ]
 		exit 1
 	fi
 fi
+
+# kontrollib, kas grupp on juba olemas
+getent group | cut -d: -f1 | grep $2 > /dev/null 2>&1
+
+# juhul, kui eelneva käsu veakood pole 0 (gruppi pole olemas)
+if [ $? != 0 ]
+	then
+	sudo addgroup $2 > /dev/null 2>&1
+	
+	# kui grupi loomisel esines tõrge
+	if [ $? != 0 ]
+		then
+		echo 'Viga grupi loomisel!'
+		exit 1
+	fi
+fi
+
