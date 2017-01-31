@@ -50,3 +50,9 @@ if [ $? != 0 ]
 	fi
 fi
 
+# 1. muudame 'valid users' väärtust
+# võtame rea, kus 'valid users' asub ja paneme selle sisu muutujasse
+valid_rida=$(grep "valid users" /etc/samba/smb.conf)
+
+# asendame selle rea
+sudo sed -ie "s/$valid_rida/valid users = @$2/g" /etc/samba/smb.conf
