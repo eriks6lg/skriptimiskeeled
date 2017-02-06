@@ -3,7 +3,7 @@
 # kõikide järgnevate käskude stdout ja stderr saadetakse /dev/nulli
 
 # kontrollib, kas samba on installitud
-sudo dpkg -s samba > /dev/null 2>&1
+dpkg -s samba > /dev/null 2>&1
 
 # kui eelneva käsu veakood pole 0 (samba pole installitud)
 if [ $? != 0 ]
@@ -34,6 +34,15 @@ if [ $? != 0 ]
 	fi
 fi
 
+# loome kausta jaoks absolute pathi
+if [[ "$1" == /* ]]
+	then
+	abs_path=$1
+else
+	this_path=$(pwd) > /dev/null 2>&1
+	abs_path=$this_path'/'$1
+fi
+
 # kontrollib, kas grupp on juba olemas
 getent group | cut -d: -f1 | grep $2 > /dev/null 2>&1
 
@@ -50,9 +59,11 @@ if [ $? != 0 ]
 	fi
 fi
 
-# 1. muudame 'valid users' väärtust
-# võtame rea, kus 'valid users' asub ja paneme selle sisu muutujasse
-valid_rida=$(grep "valid users" /etc/samba/smb.conf)
+# kontrollime, kas grupil on share olemas Samba konfiguratsioonifailis
+grep -F "[$2]" /etc/samba/smb.conf > /dev/null 2>&1
 
-# asendame selle rea
-sudo sed -ie "s/$valid_rida/valid users = @$2/g" /etc/samba/smb.conf
+# juhul, kui eelneva käsu exit code pole 0 (share pole olemas)
+if [ $? != 0 ]
+	then
+	sudo bash -c "echo -e '[$2]\npath = $abs_path\nvalid users = @$2\nread only = no' >> /etc/samba/smb.conf"
+fi
